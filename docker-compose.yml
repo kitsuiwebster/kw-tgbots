@@ -1,0 +1,21 @@
+services:
+  italian-bot:
+    build: .
+    container_name: italian-learning-bot
+    restart: unless-stopped
+    environment:
+      TELEGRAM_BOT_TOKEN: "${TELEGRAM_BOT_TOKEN}"
+      TELEGRAM_CHAT_IDS: "${TELEGRAM_CHAT_IDS:-}"
+      SEND_TIMES: "${SEND_TIMES:-09:00,14:00,20:00}"
+      TZ: "${TZ:-Europe/Paris}"
+      MISTRAL_API_KEY: "${MISTRAL_API_KEY}"
+      MISTRAL_HTTP_TIMEOUT: "${MISTRAL_HTTP_TIMEOUT:-60}"
+      MISTRAL_FORCE_IPV4: "${MISTRAL_FORCE_IPV4:-true}"
+      TELEGRAM_FORCE_IPV4: "${TELEGRAM_FORCE_IPV4:-true}"
+      TELEGRAM_HTTP_TIMEOUT: "${TELEGRAM_HTTP_TIMEOUT:-5}"
+      MISTRAL_MODEL: "${MISTRAL_MODEL:-mistral-small-latest}"
+      WORDS_PATH: "/app/words.json"
+      SUBSCRIBERS_PATH: "/data/subscribers.json"
+    volumes:
+      - ./app/words.json:/app/words.json:ro
+      - ./data:/data

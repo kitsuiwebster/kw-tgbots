@@ -1,0 +1,28 @@
+# Environment secrets
+.env
+.env.*
+!.env.example
+
+# Python cache/artifacts
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Local runtime data
+data/
+!data/.gitkeep
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/
