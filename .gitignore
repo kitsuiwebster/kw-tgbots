@@ -19,8 +19,8 @@ venv/
 env/
 
 # Local runtime data
-data/
-!data/.gitkeep
+**/data/
+!**/data/.gitkeep
 
 # OS/editor
 .DS_Store
