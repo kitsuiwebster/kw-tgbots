@@ -92,7 +92,7 @@ class MistralClient:
             "temperature": 0,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": content},
+                {"role": "user", "content": f"Entity name: \"{content}\". List ALL companies worldwide that carry this exact name."},
             ],
         }
 
