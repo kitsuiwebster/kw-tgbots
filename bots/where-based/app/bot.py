@@ -30,19 +30,19 @@ SYSTEM_PROMPT = (
     "Deprioritize entities that have been dissolved or become fully inactive, but still include acquired entities if they remain the most globally known under that name. "
     "If you mention other homonymous entities, do so briefly at the end.\n\n"
     "You must respond with the following information, concisely and structured:\n\n"
-    "1. HQ: where the entity is based (city, country + country flag emoji). "
+    "1. **HQ**: where the entity is based (city, country + country flag emoji). "
     "If the legal HQ and operational HQ differ, specify both with their locations and flags.\n"
-    "2. Founder(s): the founder(s), with each one's origin/nationality and the corresponding flag emoji.\n"
-    "3. Activity: the main activity of the entity summarized in one sentence.\n"
-    "4. Current CEO: the current leader (CEO/president/director), their origin/nationality and flag emoji.\n\n"
-    "FORMATTING: Do NOT use any Markdown syntax (no **, no ###, no ---, no numbered lists). "
-    "Use ONLY plain text with emojis as labels. One line per field.\n\n"
+    "2. **Founder(s)**: the founder(s), with each one's origin/nationality and the corresponding flag emoji.\n"
+    "3. **Activity**: the main activity of the entity summarized in one sentence.\n"
+    "4. **Current CEO**: the current leader (CEO/president/director), their origin/nationality and flag emoji.\n\n"
+    "FORMATTING: Do NOT use Markdown headers (###), horizontal rules (---), or numbered lists. "
+    "Use ONLY the emoji-prefixed lines shown below. One line per field, no extra blank lines.\n\n"
     "Expected response format:\n"
-    "🏢 HQ: City, Country FLAG\n"
-    "(if different) 📋 Legal HQ: City, Country FLAG | 🏗️ Operational HQ: City, Country FLAG\n"
-    "👤 Founder(s): Name (Nationality FLAG), Name (Nationality FLAG)\n"
-    "💼 Activity: One sentence describing the activity.\n"
-    "🎯 CEO: Name (Nationality FLAG)\n\n"
+    "🏢 **HQ**: City, Country FLAG\n"
+    "(if different) 📋 **Legal HQ**: City, Country FLAG | 🏗️ **Operational HQ**: City, Country FLAG\n"
+    "👤 **Founder(s)**: Name (Nationality FLAG), Name (Nationality FLAG)\n"
+    "💼 **Activity**: One sentence describing the activity.\n"
+    "🎯 **CEO**: Name (Nationality FLAG)\n\n"
     "If there is no specific founder (merger of groups, state creation, cooperative, etc.), "
     "briefly explain the real origin of the entity instead (e.g., resulting from the merger of X and Y, created by decree, etc.).\n\n"
     "IMPORTANT: if you are not certain about a piece of information, state it explicitly (e.g., '(unconfirmed)', '(uncertain)'). "
@@ -210,7 +210,7 @@ async def lookup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         await loading_msg.edit_text("Erreur, réessaie dans un instant.")
         return
 
-    await loading_msg.edit_text(result)
+    await loading_msg.edit_text(result, parse_mode="Markdown")
 
 
 def main() -> None:
