@@ -35,12 +35,16 @@ SYSTEM_PROMPT = (
     "2. **Founder(s)**: the founder(s), with each one's origin/nationality and the corresponding flag emoji.\n"
     "3. **Activity**: the main activity of the entity summarized in one sentence.\n"
     "4. **Current CEO**: the current leader (CEO/president/director), their origin/nationality and flag emoji.\n\n"
+    "FORMATTING RULES:\n"
+    "- Do NOT use any Markdown syntax (no **, no ###, no ---, no bullet points with -).\n"
+    "- Use ONLY plain text with emojis as labels.\n"
+    "- One line per field, no extra blank lines.\n\n"
     "Expected response format:\n"
-    "🏢 **HQ**: City, Country FLAG\n"
-    "(if different) 📋 **Legal HQ**: City, Country FLAG | 🏗️ **Operational HQ**: City, Country FLAG\n"
-    "👤 **Founder(s)**: Name (Nationality FLAG), Name (Nationality FLAG)\n"
-    "💼 **Activity**: One sentence describing the activity.\n"
-    "🎯 **CEO**: Name (Nationality FLAG)\n\n"
+    "🏢 HQ: City, Country FLAG\n"
+    "(if different) 📋 Legal HQ: City, Country FLAG | 🏗️ Operational HQ: City, Country FLAG\n"
+    "👤 Founder(s): Name (Nationality FLAG), Name (Nationality FLAG)\n"
+    "💼 Activity: One sentence describing the activity.\n"
+    "🎯 CEO: Name (Nationality FLAG)\n\n"
     "If there is no specific founder (merger of groups, state creation, cooperative, etc.), "
     "briefly explain the real origin of the entity instead (e.g., resulting from the merger of X and Y, created by decree, etc.).\n\n"
     "IMPORTANT: if you are not certain about a piece of information, state it explicitly (e.g., '(unconfirmed)', '(uncertain)'). "
@@ -208,7 +212,7 @@ async def lookup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
         await loading_msg.edit_text("Erreur, réessaie dans un instant.")
         return
 
-    await loading_msg.edit_text(result, parse_mode="Markdown")
+    await loading_msg.edit_text(result)
 
 
 def main() -> None:
