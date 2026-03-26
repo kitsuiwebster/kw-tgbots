@@ -273,7 +273,7 @@ async def translate_text_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE)
     translator: MistralTranslator = context.application.bot_data["translator"]
     original = update.message.text
 
-    loading_emoji = random.choice(["⏳", "🔄", "💭", "🇮🇹"])
+    loading_emoji = random.choice(["⏳", "💭", "🪄"])
     loading_msg = await update.message.reply_text(loading_emoji)
 
     try:
@@ -302,7 +302,7 @@ async def eyes_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     await query.message.edit_reply_markup(reply_markup=None)
 
-    loading_emoji = random.choice(["⏳", "🔄", "💭", "📖"])
+    loading_emoji = random.choice(["⏳", "💭", "🪄"])
     loading_msg = await query.message.reply_text(loading_emoji)
 
     translator: MistralTranslator = context.application.bot_data["translator"]
