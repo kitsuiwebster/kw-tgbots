@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import random
 import socket
 from pathlib import Path
 import json
@@ -31,7 +32,10 @@ SYSTEM_PROMPT = (
     "👤 **Fondateur(s)** : Nom (Nationalité FLAG), Nom (Nationalité FLAG)\n"
     "💼 **Activité** : Une phrase décrivant l'activité.\n"
     "🎯 **CEO** : Nom (Nationalité FLAG)\n\n"
-    "Si tu ne connais pas une information avec certitude, indique-le clairement avec ❓. "
+    "Si un fondateur précis n'existe pas (fusion de groupes, création étatique, coopérative, etc.), "
+    "explique brièvement l'origine réelle de l'entité à la place (ex: issue de la fusion de X et Y, créée par décret, etc.).\n\n"
+    "IMPORTANT : si tu n'es pas certain d'une information, précise-le explicitement (ex: « (non confirmé) », « (incertain) »). "
+    "Si tu ne connais pas du tout une information, indique-le avec ❓.\n"
     "Ne fais aucun commentaire supplémentaire. Réponds uniquement avec le format demandé."
 )
 
@@ -182,14 +186,17 @@ async def lookup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     mistral: MistralClient = context.application.bot_data["mistral"]
 
+    emoji = random.choice(["⏳", "🔍", "🌍", "🏢", "🔎", "💡", "📡", "🧭", "🗺️", "⚡"])
+    loading_msg = await update.message.reply_text(f"{emoji} Recherche en cours…")
+
     try:
         result = await mistral.query(update.message.text)
     except Exception:
         logger.exception("Erreur Mistral")
-        await update.message.reply_text("Erreur, réessaie dans un instant.")
+        await loading_msg.edit_text("Erreur, réessaie dans un instant.")
         return
 
-    await update.message.reply_text(result, parse_mode="Markdown")
+    await loading_msg.edit_text(result, parse_mode="Markdown")
 
 
 def main() -> None:
