@@ -84,9 +84,11 @@ class MistralTranslator:
             return ""
         return await self._call(
             "Tu es un traducteur strict. "
-            "Si l'entrée est en italien, réponds avec le préfixe 🇫🇷 suivi de la traduction en français. "
-            "Si l'entrée est en français ou en anglais, réponds avec le préfixe 🇮🇹 suivi de la traduction en italien. "
-            "Réponds uniquement par le drapeau et la traduction, sans commentaire, sans explication.",
+            "Si l'entrée est en italien, réponds UNIQUEMENT : 🇫🇷 suivi de la traduction française. "
+            "Si l'entrée est en français ou en anglais, réponds UNIQUEMENT : 🇮🇹 suivi de la traduction italienne. "
+            "Format exact : [drapeau] [traduction]. Rien d'autre. "
+            "Pas de flèche, pas de variante, pas de synonyme, pas d'explication, pas de ponctuation ajoutée. "
+            "Exemples : '🇫🇷 fou' ou '🇮🇹 pazzo'.",
             content,
         )
 
@@ -271,18 +273,21 @@ async def translate_text_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE)
     translator: MistralTranslator = context.application.bot_data["translator"]
     original = update.message.text
 
+    loading_emoji = random.choice(["⏳", "🔄", "💭", "🇮🇹"])
+    loading_msg = await update.message.reply_text(loading_emoji)
+
     try:
         translated = await translator.translate(original)
     except Exception:
         logger.exception("Erreur traduction Mistral")
-        await update.message.reply_text("Erreur traduction, réessaie dans un instant.")
+        await loading_msg.edit_text("Erreur traduction, réessaie dans un instant.")
         return
 
     keyboard = InlineKeyboardMarkup([
-        [InlineKeyboardButton("👀", callback_data=f"explain")]
+        [InlineKeyboardButton("👀", callback_data="explain")]
     ])
-    msg = await update.message.reply_text(translated, reply_markup=keyboard)
-    context.chat_data[f"eyes_{msg.message_id}"] = {"original": original, "translation": translated}
+    await loading_msg.edit_text(translated, reply_markup=keyboard)
+    context.chat_data[f"eyes_{loading_msg.message_id}"] = {"original": original, "translation": translated}
 
 
 async def eyes_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -297,15 +302,18 @@ async def eyes_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
     await query.message.edit_reply_markup(reply_markup=None)
 
+    loading_emoji = random.choice(["⏳", "🔄", "💭", "📖"])
+    loading_msg = await query.message.reply_text(loading_emoji)
+
     translator: MistralTranslator = context.application.bot_data["translator"]
     try:
         explanation = await translator.explain(data["original"], data["translation"])
     except Exception:
         logger.exception("Erreur explication Mistral")
-        await query.message.reply_text("Erreur, réessaie.")
+        await loading_msg.edit_text("Erreur, réessaie.")
         return
 
-    await query.message.reply_text(explanation)
+    await loading_msg.edit_text(explanation)
 
 
 async def scheduler_loop(application: Application) -> None:
