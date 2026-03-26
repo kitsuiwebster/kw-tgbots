@@ -27,7 +27,7 @@ SYSTEM_PROMPT = (
     "If multiple entities share this exact name, ALWAYS prioritize the one with the highest global visibility "
     "(largest valuation, most worldwide media coverage, most employees). Think GLOBALLY, not locally. "
     "Do NOT default to French or European companies — search worldwide. "
-    "Ignore entities that have been acquired, dissolved, or become inactive. "
+    "Deprioritize entities that have been dissolved or become fully inactive, but still include acquired entities if they remain the most globally known under that name. "
     "If you mention other homonymous entities, do so briefly at the end.\n\n"
     "You must respond with the following information, concisely and structured:\n\n"
     "1. **HQ**: where the entity is based (city, country + country flag emoji). "
