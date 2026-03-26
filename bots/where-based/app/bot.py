@@ -199,7 +199,7 @@ async def lookup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
 
     mistral: MistralClient = context.application.bot_data["mistral"]
 
-    emoji = random.choice(["⏳", "🔍", "🌍", "🏢", "🔎", "💡", "📡", "🧭", "🗺️", "⚡"])
+    emoji = random.choice(["⏳", "🔍", "🌍", "🔎", "💡", "🧭", "⚡"])
     loading_msg = await update.message.reply_text(emoji)
 
     try:
