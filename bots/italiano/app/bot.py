@@ -10,9 +10,9 @@ from zoneinfo import ZoneInfo
 from pathlib import Path
 from typing import Iterable
 
-from telegram import Update
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.request import HTTPXRequest
-from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
+from telegram.ext import Application, CallbackQueryHandler, CommandHandler, ContextTypes, MessageHandler, filters
 import httpx
 
 logging.basicConfig(
@@ -51,33 +51,19 @@ class MistralTranslator:
         self.model = model
         self.url = "https://api.mistral.ai/v1/chat/completions"
 
-    async def translate(self, text: str) -> str:
-        content = (text or "").strip()
-        if not content:
-            return ""
-
+    async def _call(self, system: str, user_content: str) -> str:
         payload = {
             "model": self.model,
             "temperature": 0,
             "messages": [
-                {
-                    "role": "system",
-                    "content": (
-                        "Tu es un traducteur strict. "
-                        "Si l'entrée est en italien, traduis en français. "
-                        "Si l'entrée est en français ou en anglais, traduis en italien. "
-                        "Réponds uniquement par la traduction, sans commentaire, sans explication."
-                    ),
-                },
-                {"role": "user", "content": content},
+                {"role": "system", "content": system},
+                {"role": "user", "content": user_content},
             ],
         }
-
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
-
         timeout = httpx.Timeout(self.timeout_seconds)
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(self.url, headers=headers, json=payload)
@@ -87,12 +73,34 @@ class MistralTranslator:
         choices = data.get("choices", [])
         if not choices:
             raise ValueError("Réponse Mistral invalide: 'choices' vide")
-
-        message = choices[0].get("message", {})
-        translated = (message.get("content") or "").strip()
-        if not translated:
+        result = (choices[0].get("message", {}).get("content") or "").strip()
+        if not result:
             raise ValueError("Réponse Mistral vide")
-        return translated
+        return result
+
+    async def translate(self, text: str) -> str:
+        content = (text or "").strip()
+        if not content:
+            return ""
+        return await self._call(
+            "Tu es un traducteur strict. "
+            "Si l'entrée est en italien, réponds avec le préfixe 🇫🇷 suivi de la traduction en français. "
+            "Si l'entrée est en français ou en anglais, réponds avec le préfixe 🇮🇹 suivi de la traduction en italien. "
+            "Réponds uniquement par le drapeau et la traduction, sans commentaire, sans explication.",
+            content,
+        )
+
+    async def explain(self, original: str, translation: str) -> str:
+        return await self._call(
+            "Tu es un professeur d'italien pour un francophone. "
+            "On te donne un mot ou une phrase avec sa traduction. "
+            "Réponds en français avec :\n"
+            "1. Une brève explication de l'usage dans l'italien parlé (registre, contexte, fréquence)\n"
+            "2. Un exemple de phrase en italien utilisant ce mot/cette expression\n"
+            "3. La traduction française de cet exemple\n"
+            "Sois concis. Pas de titre, pas de numérotation.",
+            f"{original} = {translation}",
+        )
 
 
 @dataclass(frozen=True)
@@ -261,15 +269,43 @@ async def translate_text_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
 
     translator: MistralTranslator = context.application.bot_data["translator"]
+    original = update.message.text
 
     try:
-        translated = await translator.translate(update.message.text)
+        translated = await translator.translate(original)
     except Exception:
         logger.exception("Erreur traduction Mistral")
         await update.message.reply_text("Erreur traduction, réessaie dans un instant.")
         return
 
-    await update.message.reply_text(translated)
+    keyboard = InlineKeyboardMarkup([
+        [InlineKeyboardButton("👀", callback_data=f"explain")]
+    ])
+    msg = await update.message.reply_text(translated, reply_markup=keyboard)
+    context.chat_data[f"eyes_{msg.message_id}"] = {"original": original, "translation": translated}
+
+
+async def eyes_callback(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    query = update.callback_query
+    if not query or not query.message:
+        return
+    await query.answer()
+
+    data = context.chat_data.pop(f"eyes_{query.message.message_id}", None)
+    if not data:
+        return
+
+    await query.message.edit_reply_markup(reply_markup=None)
+
+    translator: MistralTranslator = context.application.bot_data["translator"]
+    try:
+        explanation = await translator.explain(data["original"], data["translation"])
+    except Exception:
+        logger.exception("Erreur explication Mistral")
+        await query.message.reply_text("Erreur, réessaie.")
+        return
+
+    await query.message.reply_text(explanation)
 
 
 async def scheduler_loop(application: Application) -> None:
@@ -368,6 +404,7 @@ def main() -> None:
 
     app.add_handler(CommandHandler("start", start_cmd))
     app.add_handler(CommandHandler("w", w_cmd))
+    app.add_handler(CallbackQueryHandler(eyes_callback, pattern="^explain$"))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, translate_text_cmd))
 
     logger.info("Bot prêt")

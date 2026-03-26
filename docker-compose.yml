@@ -13,7 +13,7 @@ services:
       MISTRAL_FORCE_IPV4: "${FORCE_IPV4:-true}"
       TELEGRAM_FORCE_IPV4: "${FORCE_IPV4:-true}"
       TELEGRAM_HTTP_TIMEOUT: "${TELEGRAM_HTTP_TIMEOUT:-5}"
-      MISTRAL_MODEL: "${MISTRAL_MODEL:-mistral-small-latest}"
+      MISTRAL_MODEL: "${IT_MISTRAL_MODEL:-mistral-large-latest}"
       WORDS_PATH: "/app/words.json"
       SUBSCRIBERS_PATH: "/data/subscribers.json"
     volumes:
@@ -29,7 +29,7 @@ services:
       ALLOWED_USER_IDS: "${WB_ALLOWED_USER_IDS:-}"
       MISTRAL_API_KEY: "${MISTRAL_API_KEY}"
       MISTRAL_HTTP_TIMEOUT: "${MISTRAL_HTTP_TIMEOUT:-60}"
-      MISTRAL_MODEL: "${MISTRAL_MODEL:-mistral-small-latest}"
+      MISTRAL_MODEL: "${WB_MISTRAL_MODEL:-mistral-large-latest}"
       FORCE_IPV4: "${FORCE_IPV4:-true}"
       TELEGRAM_HTTP_TIMEOUT: "${TELEGRAM_HTTP_TIMEOUT:-5}"
       SUBSCRIBERS_PATH: "/data/subscribers.json"
