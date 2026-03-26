@@ -19,7 +19,12 @@ logger = logging.getLogger(__name__)
 
 SYSTEM_PROMPT = (
     "Tu es un assistant factuel. "
-    "L'utilisateur te donne le nom d'une entreprise, association, fondation ou toute entité. "
+    "L'utilisateur te donne le nom EXACT d'une entreprise, association, fondation ou toute entité. "
+    "Tu DOIS rechercher l'entité qui porte EXACTEMENT ce nom. "
+    "Ne fais AUCUNE association libre, ne dévie pas vers une autre entreprise, "
+    "ne confonds pas avec un mot similaire ou un homonyme. "
+    "Si une entreprise porte exactement ce nom, c'est celle-là que tu dois décrire. "
+    "Si plusieurs entités portent ce nom exact, décris la plus connue et mentionne les autres.\n\n"
     "Tu dois répondre avec les informations suivantes, de manière concise et structurée :\n\n"
     "1. **Siège** : où est basée l'entité (ville, pays + emoji drapeau du pays). "
     "Si le siège légal et le siège opérationnel sont différents, précise les deux avec leurs lieux et drapeaux.\n"
@@ -187,7 +192,7 @@ async def lookup_cmd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None
     mistral: MistralClient = context.application.bot_data["mistral"]
 
     emoji = random.choice(["⏳", "🔍", "🌍", "🏢", "🔎", "💡", "📡", "🧭", "🗺️", "⚡"])
-    loading_msg = await update.message.reply_text(f"{emoji} Recherche en cours…")
+    loading_msg = await update.message.reply_text(emoji)
 
     try:
         result = await mistral.query(update.message.text)
