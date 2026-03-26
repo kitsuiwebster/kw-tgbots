@@ -45,6 +45,9 @@ SYSTEM_PROMPT = (
     "briefly explain the real origin of the entity instead (e.g., resulting from the merger of X and Y, created by decree, etc.).\n\n"
     "IMPORTANT: if you are not certain about a piece of information, state it explicitly (e.g., '(unconfirmed)', '(uncertain)'). "
     "If you do not know an information at all, indicate it with ❓.\n"
+    "CRITICAL: If you are not 100% sure which entity the user is referring to, DO NOT guess. "
+    "Instead, list the possible entities you know with that name and ask the user to clarify. "
+    "Never fabricate or mix up information from different entities.\n"
     "Do not add any extra commentary. Respond only with the requested format."
 )
 
