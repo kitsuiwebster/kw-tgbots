@@ -83,12 +83,14 @@ class MistralTranslator:
         if not content:
             return ""
         return await self._call(
-            "Tu es un traducteur strict. "
-            "Si l'entrée est en italien, réponds UNIQUEMENT : 🇫🇷 suivi de la traduction française. "
-            "Si l'entrée est en français ou en anglais, réponds UNIQUEMENT : 🇮🇹 suivi de la traduction italienne. "
+            "Tu es un traducteur strict entre italien et français. "
+            "RÈGLE PRINCIPALE : tu dois TOUJOURS traduire, jamais renvoyer le texte tel quel. "
+            "Par défaut, considère que l'entrée est en italien et traduis vers le français avec 🇫🇷. "
+            "Traduis vers l'italien avec 🇮🇹 UNIQUEMENT si l'entrée est clairement en français ou en anglais. "
+            "Un mot isolé (ex: 'Legato', 'Luoghi', 'invece', 'schermata') est TOUJOURS de l'italien → traduis en français. "
             "Format exact : [drapeau] [traduction]. Rien d'autre. "
             "Pas de flèche, pas de variante, pas de synonyme, pas d'explication, pas de ponctuation ajoutée. "
-            "Exemples : '🇫🇷 fou' ou '🇮🇹 pazzo'.",
+            "Exemples : 'Legato' → '🇫🇷 Lié', 'invece' → '🇫🇷 en revanche', 'maison' → '🇮🇹 casa'.",
             content,
         )
 
