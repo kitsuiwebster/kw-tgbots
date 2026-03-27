@@ -78,20 +78,32 @@ class MistralTranslator:
             raise ValueError("Réponse Mistral vide")
         return result
 
+    async def detect_language(self, text: str) -> str:
+        result = await self._call(
+            "Tu es un détecteur de langue. Réponds UNIQUEMENT par un seul mot : 'italien', 'français' ou 'anglais'. "
+            "Rien d'autre. Pas de ponctuation, pas d'explication.",
+            text,
+        )
+        lang = result.strip().lower().rstrip(".")
+        if lang in ("français", "francais", "french"):
+            return "français"
+        if lang in ("anglais", "english"):
+            return "anglais"
+        return "italien"
+
     async def translate(self, text: str) -> str:
         content = (text or "").strip()
         if not content:
             return ""
+        lang = await self.detect_language(content)
+        if lang == "italien":
+            instruction = f"Traduis ce texte ITALIEN en français. Réponds UNIQUEMENT : 🇫🇷 suivi de la traduction française."
+        else:
+            instruction = f"Traduis ce texte ({lang.upper()}) en italien. Réponds UNIQUEMENT : 🇮🇹 suivi de la traduction italienne."
         return await self._call(
-            "Tu es un traducteur strict. Tu traduis TOUJOURS, tu ne renvoies jamais le texte tel quel. "
-            "3 cas possibles :\n"
-            "1) Entrée en italien → réponds 🇫🇷 + traduction française.\n"
-            "2) Entrée en français → réponds 🇮🇹 + traduction italienne.\n"
-            "3) Entrée en anglais → réponds 🇮🇹 + traduction italienne.\n"
-            "En cas de doute sur la langue, considère que c'est de l'italien (cas 1). "
-            "Format exact : [drapeau] [traduction]. Rien d'autre. "
+            f"{instruction} "
             "Pas de flèche, pas de variante, pas de synonyme, pas d'explication, pas de ponctuation ajoutée. "
-            "Exemples : 'Legato' → '🇫🇷 Lié', 'invece' → '🇫🇷 en revanche', 'maison' → '🇮🇹 casa', 'remove' → '🇮🇹 rimuovere'.",
+            "Format exact : [drapeau] [traduction]. Rien d'autre.",
             content,
         )
 
