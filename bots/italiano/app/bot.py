@@ -45,9 +45,9 @@ def maybe_force_ipv4() -> None:
 
 
 class MistralTranslator:
-    MIN_INTERVAL_SECONDS = 1.5
-    MAX_RETRIES = 5
-    DEFAULT_RETRY_AFTER_SECONDS = 2.0
+    MIN_INTERVAL_SECONDS = 2.0
+    MAX_RETRIES = 3
+    DEFAULT_RETRY_AFTER_SECONDS = 1.0
 
     def __init__(self, api_key: str, timeout_seconds: float, model: str):
         self.api_key = api_key
