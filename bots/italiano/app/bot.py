@@ -45,11 +45,23 @@ def maybe_force_ipv4() -> None:
 
 
 class MistralTranslator:
+    MIN_INTERVAL_SECONDS = 1.1
+
     def __init__(self, api_key: str, timeout_seconds: float, model: str):
         self.api_key = api_key
         self.timeout_seconds = timeout_seconds
         self.model = model
         self.url = "https://api.mistral.ai/v1/chat/completions"
+        self._lock = asyncio.Lock()
+        self._last_call_at = 0.0
+
+    async def _throttle(self) -> None:
+        async with self._lock:
+            now = asyncio.get_event_loop().time()
+            wait = self._last_call_at + self.MIN_INTERVAL_SECONDS - now
+            if wait > 0:
+                await asyncio.sleep(wait)
+            self._last_call_at = asyncio.get_event_loop().time()
 
     async def _call(self, system: str, user_content: str) -> str:
         payload = {
@@ -65,6 +77,7 @@ class MistralTranslator:
             "Content-Type": "application/json",
         }
         timeout = httpx.Timeout(self.timeout_seconds)
+        await self._throttle()
         async with httpx.AsyncClient(timeout=timeout) as client:
             response = await client.post(self.url, headers=headers, json=payload)
             response.raise_for_status()
