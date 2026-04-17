@@ -80,17 +80,33 @@ class MistralTranslator:
         }
         timeout = httpx.Timeout(self.timeout_seconds)
         attempt = 0
+        payload_size = len(json.dumps(payload))
         while True:
             await self._throttle()
+            started = asyncio.get_event_loop().time()
+            logger.info(
+                "Mistral POST model=%s payload_bytes=%d attempt=%d t=%.3f",
+                self.model, payload_size, attempt, started,
+            )
             async with httpx.AsyncClient(timeout=timeout) as client:
                 response = await client.post(self.url, headers=headers, json=payload)
+                elapsed = asyncio.get_event_loop().time() - started
+                logger.info(
+                    "Mistral RESP status=%d elapsed=%.3fs headers=%s",
+                    response.status_code,
+                    elapsed,
+                    {k: v for k, v in response.headers.items() if k.lower().startswith(("x-", "retry", "ratelimit"))},
+                )
                 if response.status_code == 429 and attempt < self.MAX_RETRIES:
                     retry_after_header = response.headers.get("Retry-After")
                     try:
                         retry_after = float(retry_after_header) if retry_after_header else self.DEFAULT_RETRY_AFTER_SECONDS * (2 ** attempt)
                     except ValueError:
                         retry_after = self.DEFAULT_RETRY_AFTER_SECONDS * (2 ** attempt)
-                    logger.warning("Mistral 429, retry dans %.1fs (tentative %d)", retry_after, attempt + 1)
+                    logger.warning(
+                        "Mistral 429 body=%s retry dans %.1fs (tentative %d)",
+                        response.text[:200], retry_after, attempt + 1,
+                    )
                     attempt += 1
                     await asyncio.sleep(retry_after)
                     continue
