@@ -46,6 +46,8 @@ def maybe_force_ipv4() -> None:
 
 class MistralTranslator:
     MIN_INTERVAL_SECONDS = 1.5
+    MAX_RETRIES = 5
+    DEFAULT_RETRY_AFTER_SECONDS = 2.0
 
     def __init__(self, api_key: str, timeout_seconds: float, model: str):
         self.api_key = api_key
@@ -77,11 +79,24 @@ class MistralTranslator:
             "Content-Type": "application/json",
         }
         timeout = httpx.Timeout(self.timeout_seconds)
-        await self._throttle()
-        async with httpx.AsyncClient(timeout=timeout) as client:
-            response = await client.post(self.url, headers=headers, json=payload)
-            response.raise_for_status()
-            data = response.json()
+        attempt = 0
+        while True:
+            await self._throttle()
+            async with httpx.AsyncClient(timeout=timeout) as client:
+                response = await client.post(self.url, headers=headers, json=payload)
+                if response.status_code == 429 and attempt < self.MAX_RETRIES:
+                    retry_after_header = response.headers.get("Retry-After")
+                    try:
+                        retry_after = float(retry_after_header) if retry_after_header else self.DEFAULT_RETRY_AFTER_SECONDS * (2 ** attempt)
+                    except ValueError:
+                        retry_after = self.DEFAULT_RETRY_AFTER_SECONDS * (2 ** attempt)
+                    logger.warning("Mistral 429, retry dans %.1fs (tentative %d)", retry_after, attempt + 1)
+                    attempt += 1
+                    await asyncio.sleep(retry_after)
+                    continue
+                response.raise_for_status()
+                data = response.json()
+                break
 
         choices = data.get("choices", [])
         if not choices:
